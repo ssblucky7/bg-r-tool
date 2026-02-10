@@ -1,9 +1,10 @@
 let originalImage = null;
 let processedImage = null;
+let originalFileName = 'image';
 
 const imageInput = document.getElementById('imageInput');
 const uploadSection = document.getElementById('uploadSection');
-const contentSection = document.getElementById('contentSection');
+const workspace = document.getElementById('workspace');
 const originalImg = document.getElementById('originalImage');
 const resultImg = document.getElementById('resultImage');
 const loader = document.getElementById('loader');
@@ -18,6 +19,8 @@ function handleFileSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
     
+    originalFileName = file.name.replace(/\.[^/.]+$/, '');
+    
     if (file.size > 5 * 1024 * 1024) {
         alert('File size exceeds 5MB limit');
         return;
@@ -28,7 +31,7 @@ function handleFileSelect(e) {
         originalImage = e.target.result;
         originalImg.src = originalImage;
         uploadSection.style.display = 'none';
-        contentSection.style.display = 'block';
+        workspace.style.display = 'grid';
     };
     reader.readAsDataURL(file);
 }
@@ -60,8 +63,8 @@ removeBtn.addEventListener('click', async () => {
         
         processedImage = 'data:image/png;base64,' + data.image;
         resultImg.src = processedImage;
-        controls.style.display = 'block';
-        downloadSection.style.display = 'grid';
+        document.getElementById('applyBtn').style.display = 'block';
+        downloadSection.style.display = 'block';
         
     } catch (error) {
         alert('Error processing image: ' + error.message);
@@ -76,6 +79,8 @@ removeBtn.addEventListener('click', async () => {
 document.getElementById('bgType').addEventListener('change', (e) => {
     document.getElementById('colorPicker').style.display = 
         e.target.value === 'color' ? 'block' : 'none';
+    document.getElementById('customBgPicker').style.display = 
+        e.target.value === 'custom' ? 'block' : 'none';
 });
 
 // Slider updates
@@ -99,14 +104,28 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
     
     try {
         const base64Data = processedImage.split(',')[1];
+        const bgType = document.getElementById('bgType').value;
+        
+        let customBgData = null;
+        if (bgType === 'custom') {
+            const customBgFile = document.getElementById('customBg').files[0];
+            if (customBgFile) {
+                customBgData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(customBgFile);
+                });
+            }
+        }
         
         const response = await fetch('/apply-effects', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 image: base64Data,
-                bgType: document.getElementById('bgType').value,
+                bgType: bgType,
                 bgColor: document.getElementById('bgColor').value,
+                customBg: customBgData,
                 brightness: parseFloat(document.getElementById('brightness').value),
                 contrast: parseFloat(document.getElementById('contrast').value),
                 sharpness: parseFloat(document.getElementById('sharpness').value),
@@ -137,7 +156,7 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
 
 // Download buttons
 document.getElementById('downloadPng').addEventListener('click', () => {
-    downloadImage(resultImg.src, 'background_removed.png');
+    downloadImage(resultImg.src, originalFileName + '.png');
 });
 
 document.getElementById('downloadJpg').addEventListener('click', () => {
@@ -151,15 +170,22 @@ document.getElementById('downloadJpg').addEventListener('click', () => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
-        downloadImage(canvas.toDataURL('image/jpeg', 0.95), 'background_removed.jpg');
+        downloadImage(canvas.toDataURL('image/jpeg', 0.95), originalFileName + '.jpg');
     };
     
     img.src = resultImg.src;
+});
+
+// New file button
+document.getElementById('newFileBtn').addEventListener('click', () => {
+    location.reload();
 });
 
 function downloadImage(dataUrl, filename) {
     const a = document.createElement('a');
     a.href = dataUrl;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
 }

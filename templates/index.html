@@ -13,7 +13,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🖼️ AI Background Remover</h1>
+            <a href="/" class="logo">🖼️</a>
+            <h1>AI Background Remover</h1>
             <p>Fast, free, and easy to use. No signup required.</p>
         </header>
 
@@ -29,22 +30,8 @@
                 </div>
             </div>
 
-            <div class="content-section" id="contentSection" style="display:none;">
-                <div class="images-grid">
-                    <div class="image-box">
-                        <h3>📷 Original</h3>
-                        <img id="originalImage" alt="Original">
-                    </div>
-                    <div class="image-box">
-                        <h3>✨ Result</h3>
-                        <img id="resultImage" alt="Result">
-                        <div class="loader" id="loader"></div>
-                    </div>
-                </div>
-
-                <button id="removeBtn" class="btn btn-primary">✨ Remove Background</button>
-
-                <div class="controls" id="controls" style="display:none;">
+            <div class="workspace" id="workspace" style="display:none;">
+                <aside class="sidebar left-sidebar">
                     <h3>🎨 Edit Options</h3>
                     
                     <div class="control-group">
@@ -52,12 +39,18 @@
                         <select id="bgType">
                             <option value="transparent">Transparent</option>
                             <option value="color">Solid Color</option>
+                            <option value="custom">Custom Image</option>
                         </select>
                     </div>
 
                     <div class="control-group" id="colorPicker" style="display:none;">
                         <label>Pick Color</label>
                         <input type="color" id="bgColor" value="#FFFFFF">
+                    </div>
+
+                    <div class="control-group" id="customBgPicker" style="display:none;">
+                        <label>Upload Background</label>
+                        <input type="file" id="customBg" accept="image/*">
                     </div>
 
                     <div class="control-group">
@@ -81,13 +74,30 @@
                         </label>
                     </div>
 
-                    <button id="applyBtn" class="btn btn-secondary">Apply Effects</button>
+                    <button id="applyBtn" class="btn btn-secondary" style="display:none;">Apply Effects</button>
+                </aside>
+
+                <div class="main-content">
+                    <div class="images-grid">
+                        <div class="image-box">
+                            <h3>📷 Original</h3>
+                            <img id="originalImage" alt="Original">
+                        </div>
+                        <div class="image-box">
+                            <h3>✨ Result</h3>
+                            <img id="resultImage" alt="Result">
+                            <div class="loader" id="loader"></div>
+                        </div>
+                    </div>
+                    <button id="removeBtn" class="btn btn-primary">✨ Remove Background</button>
                 </div>
 
-                <div class="download-section" id="downloadSection" style="display:none;">
-                    <button id="downloadPng" class="btn btn-success">📥 Download PNG</button>
-                    <button id="downloadJpg" class="btn btn-success">📥 Download JPEG</button>
-                </div>
+                <aside class="sidebar right-sidebar" id="downloadSection" style="display:none;">
+                    <h3>📥 Download</h3>
+                    <button id="downloadPng" class="btn btn-success">📥 PNG</button>
+                    <button id="downloadJpg" class="btn btn-success">📥 JPEG</button>
+                    <button id="newFileBtn" class="btn btn-new">🆕 New File</button>
+                </aside>
             </div>
         </main>
 

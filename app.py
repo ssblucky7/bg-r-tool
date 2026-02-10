@@ -83,6 +83,12 @@ def apply_effects():
             bg = Image.new('RGBA', img.size, data['bgColor'])
             bg.paste(img, (0, 0), img)
             img = bg
+        elif data.get('bgType') == 'custom' and data.get('customBg'):
+            custom_bg_data = base64.b64decode(data['customBg'])
+            custom_bg = Image.open(io.BytesIO(custom_bg_data)).convert('RGBA')
+            custom_bg = custom_bg.resize(img.size, Image.Resampling.LANCZOS)
+            custom_bg.paste(img, (0, 0), img)
+            img = custom_bg
         
         if data.get('brightness', 1.0) != 1.0:
             img = ImageEnhance.Brightness(img).enhance(data['brightness'])
