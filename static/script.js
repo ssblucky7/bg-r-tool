@@ -47,6 +47,10 @@ removeBtn.addEventListener('click', async () => {
             body: formData
         });
         
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.error) {
@@ -61,6 +65,7 @@ removeBtn.addEventListener('click', async () => {
         
     } catch (error) {
         alert('Error processing image: ' + error.message);
+        console.error('Error:', error);
     } finally {
         loader.style.display = 'none';
         removeBtn.disabled = false;
@@ -109,6 +114,10 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
             })
         });
         
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.error) {
@@ -120,6 +129,7 @@ document.getElementById('applyBtn').addEventListener('click', async () => {
         
     } catch (error) {
         alert('Error applying effects: ' + error.message);
+        console.error('Error:', error);
     } finally {
         loader.style.display = 'none';
     }

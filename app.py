@@ -3,18 +3,26 @@ from PIL import Image, ImageEnhance, ImageFilter
 import io
 import base64
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
-# Lazy load rembg to reduce startup time
 _remove_bg = None
 
 def get_remove_bg():
     global _remove_bg
     if _remove_bg is None:
-        from rembg import remove
-        _remove_bg = remove
+        try:
+            from rembg import remove
+            _remove_bg = remove
+            logger.info("rembg loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load rembg: {e}")
+            raise
     return _remove_bg
 
 @app.route('/')
@@ -28,34 +36,45 @@ def health():
 @app.route('/remove-bg', methods=['POST'])
 def remove_background():
     try:
+        logger.info("Remove background request received")
+        
         if 'image' not in request.files:
+            logger.error("No image in request")
             return jsonify({'error': 'No image provided'}), 400
         
         file = request.files['image']
+        logger.info(f"Processing image: {file.filename}")
+        
         img = Image.open(file.stream).convert('RGBA')
+        logger.info(f"Image size: {img.size}")
         
         max_dim = 1500
         if max(img.size) > max_dim:
             ratio = max_dim / max(img.size)
             new_size = tuple(int(dim * ratio) for dim in img.size)
             img = img.resize(new_size, Image.Resampling.LANCZOS)
+            logger.info(f"Resized to: {new_size}")
         
         remove_fn = get_remove_bg()
         output = remove_fn(img)
+        logger.info("Background removed")
         
         buf = io.BytesIO()
         output.save(buf, format='PNG', optimize=True)
         buf.seek(0)
         img_base64 = base64.b64encode(buf.getvalue()).decode()
         
+        logger.info("Image encoded successfully")
         return jsonify({'image': img_base64})
     
     except Exception as e:
+        logger.error(f"Error in remove_background: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/apply-effects', methods=['POST'])
 def apply_effects():
     try:
+        logger.info("Apply effects request received")
         data = request.json
         img_data = base64.b64decode(data['image'])
         img = Image.open(io.BytesIO(img_data)).convert('RGBA')
@@ -79,9 +98,11 @@ def apply_effects():
         buf.seek(0)
         img_base64 = base64.b64encode(buf.getvalue()).decode()
         
+        logger.info("Effects applied successfully")
         return jsonify({'image': img_base64})
     
     except Exception as e:
+        logger.error(f"Error in apply_effects: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
