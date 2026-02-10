@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free AI-powered background remover. Remove image backgrounds instantly with advanced editing tools. No signup required.">
+    <meta name="keywords" content="background remover, remove background, AI image editor, photo editor, transparent background">
+    <meta property="og:title" content="Free AI Background Remover">
+    <meta property="og:description" content="Remove image backgrounds instantly with AI">
+    <title>AI Background Remover - Free Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🖼️ AI Background Remover</h1>
+            <p>Fast, free, and easy to use. No signup required.</p>
+        </header>
+
+        <main>
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-box">
+                    <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg,image/webp" hidden>
+                    <label for="imageInput" class="upload-label">
+                        <span class="upload-icon">📤</span>
+                        <span>Click to upload or drag & drop</span>
+                        <small>PNG, JPG, JPEG, WEBP (Max 5MB)</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="content-section" id="contentSection" style="display:none;">
+                <div class="images-grid">
+                    <div class="image-box">
+                        <h3>📷 Original</h3>
+                        <img id="originalImage" alt="Original">
+                    </div>
+                    <div class="image-box">
+                        <h3>✨ Result</h3>
+                        <img id="resultImage" alt="Result">
+                        <div class="loader" id="loader"></div>
+                    </div>
+                </div>
+
+                <button id="removeBtn" class="btn btn-primary">✨ Remove Background</button>
+
+                <div class="controls" id="controls" style="display:none;">
+                    <h3>🎨 Edit Options</h3>
+                    
+                    <div class="control-group">
+                        <label>Background</label>
+                        <select id="bgType">
+                            <option value="transparent">Transparent</option>
+                            <option value="color">Solid Color</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="colorPicker" style="display:none;">
+                        <label>Pick Color</label>
+                        <input type="color" id="bgColor" value="#FFFFFF">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Brightness: <span id="brightnessVal">1.0</span></label>
+                        <input type="range" id="brightness" min="0.5" max="2" step="0.1" value="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Contrast: <span id="contrastVal">1.0</span></label>
+                        <input type="range" id="contrast" min="0.5" max="2" step="0.1" value="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Sharpness: <span id="sharpnessVal">1.0</span></label>
+                        <input type="range" id="sharpness" min="0" max="2" step="0.1" value="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="blur"> Smooth Edges
+                        </label>
+                    </div>
+
+                    <button id="applyBtn" class="btn btn-secondary">Apply Effects</button>
+                </div>
+
+                <div class="download-section" id="downloadSection" style="display:none;">
+                    <button id="downloadPng" class="btn btn-success">📥 Download PNG</button>
+                    <button id="downloadJpg" class="btn btn-success">📥 Download JPEG</button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ | All processing happens securely - no data stored</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
