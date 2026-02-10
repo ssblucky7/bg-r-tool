@@ -2,6 +2,10 @@
 
 Fast, free, and easy-to-use AI-powered background removal tool with custom responsive UI.
 
+## 🌐 Live Demo
+
+**[Try it now: https://w1rd8vpj-5000.inc1.devtunnels.ms/](https://w1rd8vpj-5000.inc1.devtunnels.ms/)**
+
 ## ✨ Features
 
 - 🤖 AI-powered background removal
