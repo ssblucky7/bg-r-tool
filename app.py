@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, jsonify
 from PIL import Image, ImageEnhance, ImageFilter
-from rembg import remove
 import io
 import base64
 import os
@@ -8,9 +7,23 @@ import os
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
+# Lazy load rembg to reduce startup time
+_remove_bg = None
+
+def get_remove_bg():
+    global _remove_bg
+    if _remove_bg is None:
+        from rembg import remove
+        _remove_bg = remove
+    return _remove_bg
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok'}), 200
 
 @app.route('/remove-bg', methods=['POST'])
 def remove_background():
@@ -21,16 +34,17 @@ def remove_background():
         file = request.files['image']
         img = Image.open(file.stream).convert('RGBA')
         
-        max_dim = 2000
+        max_dim = 1500
         if max(img.size) > max_dim:
             ratio = max_dim / max(img.size)
             new_size = tuple(int(dim * ratio) for dim in img.size)
             img = img.resize(new_size, Image.Resampling.LANCZOS)
         
-        output = remove(img)
+        remove_fn = get_remove_bg()
+        output = remove_fn(img)
         
         buf = io.BytesIO()
-        output.save(buf, format='PNG')
+        output.save(buf, format='PNG', optimize=True)
         buf.seek(0)
         img_base64 = base64.b64encode(buf.getvalue()).decode()
         
