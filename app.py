@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageChops
 import io
 import base64
 import os
@@ -11,19 +11,52 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
-_remove_bg = None
-
-def get_remove_bg():
-    global _remove_bg
-    if _remove_bg is None:
-        try:
-            from rembg import remove
-            _remove_bg = remove
-            logger.info("rembg loaded successfully")
-        except Exception as e:
-            logger.error(f"Failed to load rembg: {e}")
-            raise
-    return _remove_bg
+def simple_remove_bg(img):
+    """Simple background removal using edge detection and color analysis"""
+    try:
+        # Convert to RGB for processing
+        rgb_img = img.convert('RGB')
+        
+        # Get image data
+        pixels = rgb_img.load()
+        width, height = rgb_img.size
+        
+        # Sample corner pixels to determine background color
+        corners = [
+            pixels[0, 0],
+            pixels[width-1, 0],
+            pixels[0, height-1],
+            pixels[width-1, height-1]
+        ]
+        
+        # Average corner color as background
+        bg_color = tuple(sum(c[i] for c in corners) // 4 for i in range(3))
+        
+        # Create alpha channel
+        alpha = Image.new('L', (width, height), 255)
+        alpha_pixels = alpha.load()
+        
+        # Tolerance for color matching
+        tolerance = 40
+        
+        # Remove background
+        for y in range(height):
+            for x in range(width):
+                r, g, b = pixels[x, y]
+                # Check if pixel is close to background color
+                if (abs(r - bg_color[0]) < tolerance and 
+                    abs(g - bg_color[1]) < tolerance and 
+                    abs(b - bg_color[2]) < tolerance):
+                    alpha_pixels[x, y] = 0
+        
+        # Apply alpha channel
+        result = img.copy()
+        result.putalpha(alpha)
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error in simple_remove_bg: {e}")
+        raise
 
 @app.route('/')
 def index():
@@ -39,42 +72,33 @@ def remove_background():
         logger.info("Remove background request received")
         
         if 'image' not in request.files:
-            logger.error("No image in request")
             return jsonify({'error': 'No image provided'}), 400
         
         file = request.files['image']
-        logger.info(f"Processing image: {file.filename}")
-        
         img = Image.open(file.stream).convert('RGBA')
-        logger.info(f"Image size: {img.size}")
         
-        max_dim = 1500
+        max_dim = 1000
         if max(img.size) > max_dim:
             ratio = max_dim / max(img.size)
             new_size = tuple(int(dim * ratio) for dim in img.size)
             img = img.resize(new_size, Image.Resampling.LANCZOS)
-            logger.info(f"Resized to: {new_size}")
         
-        remove_fn = get_remove_bg()
-        output = remove_fn(img)
-        logger.info("Background removed")
+        output = simple_remove_bg(img)
         
         buf = io.BytesIO()
         output.save(buf, format='PNG', optimize=True)
         buf.seek(0)
         img_base64 = base64.b64encode(buf.getvalue()).decode()
         
-        logger.info("Image encoded successfully")
         return jsonify({'image': img_base64})
     
     except Exception as e:
-        logger.error(f"Error in remove_background: {str(e)}", exc_info=True)
+        logger.error(f"Error: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/apply-effects', methods=['POST'])
 def apply_effects():
     try:
-        logger.info("Apply effects request received")
         data = request.json
         img_data = base64.b64decode(data['image'])
         img = Image.open(io.BytesIO(img_data)).convert('RGBA')
@@ -98,11 +122,10 @@ def apply_effects():
         buf.seek(0)
         img_base64 = base64.b64encode(buf.getvalue()).decode()
         
-        logger.info("Effects applied successfully")
         return jsonify({'image': img_base64})
     
     except Exception as e:
-        logger.error(f"Error in apply_effects: {str(e)}", exc_info=True)
+        logger.error(f"Error: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
