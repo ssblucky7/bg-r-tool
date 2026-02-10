@@ -21,8 +21,8 @@ function handleFileSelect(e) {
     
     originalFileName = file.name.replace(/\.[^/.]+$/, '');
     
-    if (file.size > 5 * 1024 * 1024) {
-        alert('File size exceeds 5MB limit');
+    if (file.size > 100 * 1024 * 1024) {
+        alert('File size exceeds 100MB limit');
         return;
     }
     

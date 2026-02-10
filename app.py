@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
 _remove_bg = None
 
